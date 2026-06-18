@@ -1,15 +1,8 @@
-// Firebase Konfiguration
-// 1. Gehe zu https://console.firebase.google.com/
-// 2. Neues Projekt erstellen
-// 3. Firestore Database aktivieren (im Testmodus starten)
-// 4. Projekteinstellungen > Deine Apps > Web-App hinzufügen
-// 5. Die Config unten eintragen und speichern
-
 const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAaBVjL82vd2X6bM6AGqRFXiD3t_EoDDNM",
+  authDomain: "baustelle-1846e.firebaseapp.com",
+  projectId: "baustelle-1846e",
+  storageBucket: "baustelle-1846e.firebasestorage.app",
+  messagingSenderId: "1001756155338",
+  appId: "1:1001756155338:web:b00d92a19e5e313a8c8333"
 };
