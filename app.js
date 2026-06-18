@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.8';
+const VERSION='1.9';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -712,7 +712,7 @@ function renderJournal(t){
       r.innerHTML=
         '<div class="jnl-header">'+
         '<span class="jnl-ts">'+fmtJnlDate(dt)+'</span>'+
-        (e.author?'<span class="jnl-author">'+esc(e.author)+'</span>':'')+
+        (e.author?'<span class="jnl-author"> · '+esc(e.author)+'</span>':'')+
         '<button class="jnl-del ic-btn">'+UI.trash+'</button>'+
         '</div>'+
         '<div class="jnl-text">'+esc(e.text)+'</div>';

@@ -349,3 +349,16 @@ body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);back
 .row.ins-before::after,.row.ins-after::after{content:'';position:absolute;left:46px;right:10px;height:3px;border-radius:3px;background:var(--blue);z-index:5}
 .row.ins-before::after{top:-1px}
 .row.ins-after::after{bottom:-1px}
+
+/* Journal / Einträge */
+.jnl-list{display:flex;flex-direction:column}
+.jnl-row{padding:10px 14px;border-bottom:.5px solid var(--sep-soft)}
+.jnl-row:last-child{border-bottom:none}
+.jnl-header{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.jnl-ts{font-size:12px;color:var(--label3);font-weight:500;flex:1;white-space:nowrap}
+.jnl-author{font-size:12px;color:var(--label2);font-weight:600;white-space:nowrap}
+.jnl-del{color:var(--label3);margin-left:4px;flex-shrink:0}
+.jnl-text{font-size:15px;color:var(--label);line-height:1.4}
+.jnl-add{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-top:.5px solid var(--sep-soft)}
+.jnl-input{width:100%;box-sizing:border-box;font-size:15px;font-family:inherit;resize:none;padding:8px 10px;background:var(--fill);border:none;border-radius:10px;min-height:56px;color:var(--label);outline:none}
+.jnl-submit{align-self:flex-end;font-size:14px;font-weight:600;color:var(--blue);padding:6px 14px;background:var(--fill);border-radius:10px}
