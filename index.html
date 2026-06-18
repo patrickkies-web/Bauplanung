@@ -11,7 +11,7 @@
   <header class="navbar">
     <div class="nav-row">
       <span class="save-ind" id="saveInd">gesichert</span>
-      <svg class="brand-mark" viewBox="0 0 30 30" fill="none" aria-label="Bauleiter">
+      <svg class="brand-mark" id="brandMark" viewBox="0 0 30 30" fill="none" aria-label="Bauleiter">
         <path d="M5 25V12L15 5l10 7v13" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"/>
         <path d="M4 25h22" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
         <path d="M11.5 25v-6h7v6" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
@@ -42,6 +42,16 @@
     <section class="view" id="view-todo">
       <div class="scroll-pane"><div id="todoList"></div></div>
     </section>
+
+    <section class="view" id="view-protokoll">
+      <div class="scroll-pane" id="protokollPane">
+        <div class="proto-header">
+          <div class="proto-title">Änderungsprotokoll</div>
+          <div class="proto-sub" id="protoSub">Alle Änderungen werden hier aufgezeichnet</div>
+        </div>
+        <div id="protokollList"></div>
+      </div>
+    </section>
   </main>
 
   <nav class="tabbar" id="tabbar">
@@ -56,6 +66,10 @@
     <button class="tab" data-view="todo">
       <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg><span class="bdg" id="todoBadge" style="display:none">0</span></span>
       <span class="lbl">To-dos</span>
+    </button>
+    <button class="tab" data-view="protokoll" id="tabProtokoll" style="display:none">
+      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></span>
+      <span class="lbl">Protokoll</span>
     </button>
   </nav>
 </div>
@@ -79,6 +93,10 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
