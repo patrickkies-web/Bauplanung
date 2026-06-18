@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.2';
+const VERSION='1.3';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -184,31 +184,13 @@ async function init(){
   initFirebase();
   const raw=await sGet(STATE_KEY);
   if(raw){try{state=JSON.parse(raw);}catch(e){state={tasks:[]};}}
-  if(!state.tasks||!state.tasks.length){state=seed();await sSet(STATE_KEY,JSON.stringify(state));}
+  if(!state.tasks)state={tasks:[]};
   walk(state.tasks,t=>{if(openMap[t.id]===undefined)openMap[t.id]=true;});
   setupLogoSecret();
   renderAll();
   setTimeout(scrollToToday,80);
 }
 
-function seed(){
-  const t=today();const d=n=>isoD(new Date(t.getTime()+n*MS));
-  return {tasks:[
-    {...newTask('planung'),id:uid(),title:'Bestandsaufnahme & Aufmaß',prio:'hoch',done:true,start:d(-24),end:d(-18),notes:'Alle Räume vermessen, Schäden dokumentiert.',children:[
-      {...newTask('absprache'),id:uid(),title:'Architekt kontaktieren',done:true,start:d(-22),prio:'hoch'},
-    ]},
-    {...newTask('planung'),id:uid(),title:'Kostenplanung & Budget',prio:'hoch',start:d(-4),end:d(3),notes:'Puffer von 15% einplanen.',contacts:'Bank – Finanzierungszusage',children:[
-      {...newTask('todo'),id:uid(),title:'Angebote vergleichen',prio:'hoch',start:d(-2)},
-    ]},
-    {...newTask('termin'),id:uid(),title:'Statiker vor Ort',prio:'mittel',start:d(6)},
-    {...newTask('arbeit'),id:uid(),title:'Entkernung & Abbruch',prio:'hoch',start:d(10),end:d(22),children:[
-      {...newTask('absprache'),id:uid(),title:'Container bestellen',prio:'mittel',start:d(8)},
-    ]},
-    {...newTask('arbeit'),id:uid(),title:'Elektrik & Sanitär (Rohbau)',prio:'hoch',start:d(24),end:d(42)},
-    {...newTask('todo'),id:uid(),title:'KfW-Förderung prüfen',prio:'mittel',start:''},
-    {...newTask('todo'),id:uid(),title:'Fliesen aussuchen',prio:'niedrig',start:''},
-  ]};
-}
 
 /* ===== RENDER ALL ===== */
 function renderAll(){
