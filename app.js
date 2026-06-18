@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.3';
+const VERSION='1.4';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -95,7 +95,7 @@ function setupRealTimeSync(){
 async function sGet(k){
   const key=k.replace(/[:/]/g,'_');
   if(db){
-    try{const s=await db.collection('data').doc(key).get();return s.exists?s.data().value:null;}catch(e){}
+    try{const s=await db.collection('data').doc(key).get();if(s.exists)return s.data().value;}catch(e){}
   }
   try{return localStorage.getItem(k);}catch(e){return null;}
 }
@@ -154,8 +154,8 @@ function scheduleSave(){
   saveTimer=setTimeout(async()=>{
     const value=JSON.stringify(state);
     lastSavedValue=value;
-    await sSet(STATE_KEY,value);
-    if(ind){ind.textContent='gespeichert';setTimeout(()=>ind.classList.remove('show'),900);}
+    const ok=await sSet(STATE_KEY,value);
+    if(ind){ind.textContent=ok?'gespeichert':'Fehler!';setTimeout(()=>ind.classList.remove('show'),ok?900:3000);}
   },420);
 }
 
@@ -316,7 +316,7 @@ function renderTimeline(){
   }
   const t0=today();let lastMonth=null,todayPlaced=false;
   dated.forEach(d=>{
-    if(!todayPlaced&&d.s>t0){inner.appendChild(todayDivider());todayPlaced=true;lastMonth=null;}
+    if(!todayPlaced&&d.s>=t0){inner.appendChild(todayDivider());todayPlaced=true;lastMonth=null;}
     const mk=d.s.getFullYear()+'-'+d.s.getMonth();
     if(mk!==lastMonth){const sep=document.createElement('div');sep.className='month-sep';sep.textContent=MON[d.s.getMonth()]+' '+d.s.getFullYear();inner.appendChild(sep);lastMonth=mk;}
     appendTaskTiles(d.t,0,inner);
