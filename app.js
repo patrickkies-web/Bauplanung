@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.7';
+const VERSION='1.8';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -30,13 +30,14 @@ const MAX_FILE=4*1024*1024;
 const DRAG_THRESH=9;
 const UID_KEY='bauplanung:uid';
 const NAME_KEY='bauplanung:name';
+const SUPA_URL='https://ehvhprtqcyksuemvgpnl.supabase.co';
+const SUPA_KEY='sb_publishable_HlR0CaANiseQDhv2qIQrpw_Ug0MzUzb';
 
 let state={tasks:[]};
 let openMap={};
 let currentView='timeline';
 let fileCache={};
-let changelog=[];
-let db=null;
+let sb=null;
 let lastSavedValue=null;
 let syncActive=false;
 
@@ -53,16 +54,13 @@ function getUserId(){
 function getUserName(){return localStorage.getItem(NAME_KEY)||'';}
 const currentUserId=getUserId();
 
-/* ===== FIREBASE + STORAGE ===== */
-function initFirebase(){
+/* ===== SUPABASE + STORAGE ===== */
+function initSupabase(){
   try{
-    if(typeof firebase==='undefined'||!firebaseConfig||!firebaseConfig.projectId)return;
-    if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-    db=firebase.firestore();
+    if(typeof window.supabase==='undefined')return;
+    sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     setupRealTimeSync();
-  }catch(e){
-    db=null;syncActive=false;
-  }
+  }catch(e){sb=null;}
 }
 
 function updateSyncDot(){
@@ -71,39 +69,41 @@ function updateSyncDot(){
 }
 
 function setupRealTimeSync(){
-  if(!db)return;
-  const stateKey=STATE_KEY.replace(/[:/]/g,'_');
-  db.collection('data').doc(stateKey).onSnapshot(snap=>{
-    if(!syncActive){syncActive=true;updateSyncDot();}
-    if(!snap.exists)return;
-    const val=snap.data().value;
-    if(val===lastSavedValue)return;
-    try{
-      const newState=JSON.parse(val);
-      state=newState;
-      walk(state.tasks,t=>{if(openMap[t.id]===undefined)openMap[t.id]=true;});
-      renderAll();
-    }catch(e){}
-  },err=>{syncActive=false;updateSyncDot();});
-  db.collection('changelog').orderBy('ts','desc').limit(100).onSnapshot(snap=>{
-    changelog=snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(currentView==='protokoll')renderProtocol();
-  },()=>{});
+  if(!sb)return;
+  sb.channel('state-sync')
+    .on('postgres_changes',{event:'*',schema:'public',table:'data',filter:'key=eq.'+STATE_KEY},payload=>{
+      if(!payload.new)return;
+      const val=payload.new.value;
+      if(val===lastSavedValue)return;
+      try{
+        const newState=JSON.parse(val);
+        state=newState;
+        walk(state.tasks,t=>{if(openMap[t.id]===undefined)openMap[t.id]=true;});
+        renderAll();
+      }catch(e){}
+    })
+    .subscribe(status=>{
+      syncActive=(status==='SUBSCRIBED');
+      updateSyncDot();
+    });
 }
 
 async function manualSync(){
   const btn=$('#syncBtn');
   if(btn){btn.disabled=true;btn.classList.add('syncing');}
-  if(!db){
+  if(!sb){
     toast('Keine Cloud-Verbindung');
     if(btn){btn.disabled=false;btn.classList.remove('syncing');}
     return;
   }
   try{
-    const key=STATE_KEY.replace(/[:/]/g,'_');
     const value=JSON.stringify(state);
-    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000));
-    await Promise.race([db.collection('data').doc(key).set({value}),timeout]);
+    const tout=new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000));
+    const res=await Promise.race([
+      sb.from('data').upsert({key:STATE_KEY,value},{onConflict:'key'}),
+      tout
+    ]);
+    if(res&&res.error)throw res.error;
     lastSavedValue=value;
     syncActive=true;
     updateSyncDot();
@@ -117,16 +117,27 @@ async function manualSync(){
 }
 
 async function sGet(k){
-  try{return localStorage.getItem(k);}catch(e){return null;}
+  const local=localStorage.getItem(k);
+  if(local)return local;
+  if(sb&&!k.startsWith(FILE_PREFIX)){
+    try{
+      const {data,error}=await sb.from('data').select('value').eq('key',k).maybeSingle();
+      if(!error&&data?.value){localStorage.setItem(k,data.value);return data.value;}
+    }catch(e){}
+  }
+  return null;
 }
 async function sSet(k,v){
-  const key=k.replace(/[:/]/g,'_');
   let ok=false;
   try{localStorage.setItem(k,v);ok=true;}catch(e){}
-  if(db&&!k.startsWith(FILE_PREFIX)){
+  if(sb&&!k.startsWith(FILE_PREFIX)){
     try{
       const tout=new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000));
-      await Promise.race([db.collection('data').doc(key).set({value:v}),tout]);
+      const res=await Promise.race([
+        sb.from('data').upsert({key:k,value:v},{onConflict:'key'}),
+        tout
+      ]);
+      if(res&&res.error)throw res.error;
       if(!syncActive){syncActive=true;updateSyncDot();}
     }catch(e){
       if(syncActive){syncActive=false;updateSyncDot();}
@@ -135,44 +146,13 @@ async function sSet(k,v){
   return ok;
 }
 async function sDel(k){
-  const key=k.replace(/[:/]/g,'_');
-  if(db&&!k.startsWith(FILE_PREFIX)){try{await db.collection('data').doc(key).delete();}catch(e){}}
   try{localStorage.removeItem(k);}catch(e){}
+  if(sb&&!k.startsWith(FILE_PREFIX)){
+    try{await sb.from('data').delete().eq('key',k);}catch(e){}
+  }
 }
 
-/* ===== CHANGELOG ===== */
-const LOG_ACTIONS={
-  ERSTELLT:{label:'Erstellt',color:'#34C759'},
-  BEARBEITET:{label:'Bearbeitet',color:'#007AFF'},
-  ERLEDIGT:{label:'Erledigt',color:'#5AC8FA'},
-  GEOEFFNET:{label:'Wieder geöffnet',color:'#FF9500'},
-  GELOESCHT:{label:'Gelöscht',color:'#FF3B30'},
-  VERSCHOBEN:{label:'Verschoben',color:'#AF52DE'},
-  EINGEORDNET:{label:'Eingeordnet',color:'#007AFF'},
-  GELOEST:{label:'Aus Gruppe gelöst',color:'#8E8E93'},
-};
-
-function logChange(action,taskTitle,details={}){
-  if(!db)return;
-  const name=getUserName();
-  db.collection('changelog').add({
-    action,
-    taskTitle:taskTitle||'Unbekannt',
-    userId:currentUserId,
-    userName:name,
-    ts:firebase.firestore.FieldValue.serverTimestamp(),
-    ...details,
-  }).catch(()=>{});
-}
-
-function fmtAgo(date){
-  if(!date)return '';
-  const sec=Math.round((Date.now()-date.getTime())/1000);
-  if(sec<60)return 'gerade eben';
-  if(sec<3600)return Math.floor(sec/60)+'m';
-  if(sec<86400)return Math.floor(sec/3600)+'h';
-  return Math.floor(sec/86400)+'T';
-}
+function logChange(){}
 
 /* ===== SAVE ===== */
 let saveTimer=null;
@@ -212,7 +192,7 @@ function countOpen(){let n=0;walk(state.tasks,t=>{if(!t.done)n++;});return n;}
 /* ===== INIT ===== */
 async function init(){
   document.title='Bauleiter v'+VERSION;
-  initFirebase();
+  initSupabase();
   const raw=await sGet(STATE_KEY);
   if(raw){try{state=JSON.parse(raw);}catch(e){state={tasks:[]};}}
   if(!state.tasks)state={tasks:[]};
@@ -266,47 +246,17 @@ function toggleProtokoll(){
 function renderProtocol(){
   const box=$('#protokollList');if(!box)return;
   const sub=$('#protoSub');
-
-  if(!db){
-    if(sub)sub.innerHTML='<span class="sync-dot"></span>Kein Server – firebase-config.js ausfüllen';
-    box.innerHTML='<div class="log-empty">Noch nicht mit Firebase verbunden.<br>firebase-config.js befüllen, dann funktioniert das Protokoll.</div>';
-    return;
-  }
-
   if(sub){
     const name=getUserName();
-    sub.innerHTML='<span class="sync-dot'+(syncActive?' on':'')+'" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Live-Sync aktiv'+
-      (name?' · angemeldet als <strong>'+esc(name)+'</strong>':'');
+    sub.innerHTML='<span class="sync-dot'+(syncActive?' on':'')+'" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>'+(syncActive?'Live-Sync aktiv':'Keine Verbindung')+
+      (name?' · <strong>'+esc(name)+'</strong>':'');
   }
-
   const nameBox=document.createElement('div');
   nameBox.className='proto-user-row';
   nameBox.innerHTML='<span class="proto-user-label">Dein Name:</span><input class="proto-user-input" placeholder="z. B. Max Müller" value="'+escAttr(getUserName())+'">';
   nameBox.querySelector('input').oninput=e=>{localStorage.setItem(NAME_KEY,e.target.value);};
-
   box.innerHTML='';
   box.appendChild(nameBox);
-
-  if(!changelog.length){
-    const empty=document.createElement('div');empty.className='log-empty';empty.textContent='Noch keine Einträge – Änderungen erscheinen hier automatisch.';
-    box.appendChild(empty);
-    return;
-  }
-  changelog.forEach(entry=>{
-    const cfg=LOG_ACTIONS[entry.action]||{label:entry.action,color:'#8E8E93'};
-    const el=document.createElement('div');el.className='log-entry';
-    const tsDate=entry.ts&&entry.ts.toDate?entry.ts.toDate():null;
-    const timeAgo=fmtAgo(tsDate);
-    const name=entry.userName||('Nutzer '+(entry.userId||'?').slice(-4).toUpperCase());
-    el.innerHTML=
-      '<span class="log-dot" style="background:'+cfg.color+'"></span>'+
-      '<div class="log-body">'+
-      '<div class="log-title">'+esc(entry.taskTitle)+'</div>'+
-      '<div class="log-meta"><span class="log-action" style="color:'+cfg.color+'">'+cfg.label+'</span>'+
-      (timeAgo?'<span>'+timeAgo+'</span>':'')+
-      '<span class="log-user">'+esc(name)+'</span></div></div>';
-    box.appendChild(el);
-  });
 }
 
 /* ===== TIMELINE ===== */
