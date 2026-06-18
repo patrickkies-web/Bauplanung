@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.5';
+const VERSION='1.6';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -85,11 +85,35 @@ function setupRealTimeSync(){
       walk(state.tasks,t=>{if(openMap[t.id]===undefined)openMap[t.id]=true;});
       renderAll();
     }catch(e){}
-  });
+  },err=>{syncActive=false;updateSyncDot();});
   db.collection('changelog').orderBy('ts','desc').limit(100).onSnapshot(snap=>{
     changelog=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(currentView==='protokoll')renderProtocol();
-  });
+  },()=>{});
+}
+
+async function manualSync(){
+  const btn=$('#syncBtn');
+  if(btn){btn.disabled=true;btn.classList.add('syncing');}
+  if(!db){
+    toast('Keine Cloud-Verbindung');
+    if(btn){btn.disabled=false;btn.classList.remove('syncing');}
+    return;
+  }
+  try{
+    const key=STATE_KEY.replace(/[:/]/g,'_');
+    const value=JSON.stringify(state);
+    await db.collection('data').doc(key).set({value});
+    lastSavedValue=value;
+    syncActive=true;
+    updateSyncDot();
+    toast('Synchronisiert ✓');
+  }catch(e){
+    syncActive=false;
+    updateSyncDot();
+    toast('Sync fehlgeschlagen');
+  }
+  if(btn){btn.disabled=false;btn.classList.remove('syncing');}
 }
 
 async function sGet(k){
@@ -784,6 +808,7 @@ const as=$('#actionSheet');
 function openAS(){as.classList.add('open');$('#scrim').classList.add('open');}
 function closeAS(){as.classList.remove('open');if(!$('#sheet').classList.contains('open'))$('#scrim').classList.remove('open');}
 $('#addBtn').onclick=openAS;
+$('#syncBtn').onclick=manualSync;
 $('#asCancel').onclick=closeAS;
 as.addEventListener('click',e=>{
   const b=e.target.closest('.as-item');if(!b)return;
