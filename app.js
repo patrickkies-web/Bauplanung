@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.10';
+const VERSION='1.11';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -596,34 +596,45 @@ function openSheet(id){
           <div class="meta-row">
             <div class="meta-field">
               <div class="fl">Art</div>
-              <select id="sel-cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}"${t.cat===k?' selected':''}>${v.label}</option>`).join('')}</select>
+              <div class="sel-wrap">
+                <span class="sel-dot" id="cat-dot" style="background:${CATS[t.cat].color}"></span>
+                <select id="sel-cat" style="color:${CATS[t.cat].color}">${Object.entries(CATS).map(([k,v])=>`<option value="${k}"${t.cat===k?' selected':''}>${v.label}</option>`).join('')}</select>
+              </div>
             </div>
             <div class="meta-field">
               <div class="fl">Prio</div>
-              <select id="sel-prio">${Object.entries(PRIOS).map(([k,v])=>`<option value="${k}"${t.prio===k?' selected':''}>${v.label.replace(' Priorität','')}</option>`).join('')}</select>
+              <div class="sel-wrap">
+                <span class="sel-dot" id="prio-dot" style="background:${PRIOS[t.prio].color}"></span>
+                <select id="sel-prio" style="color:${PRIOS[t.prio].color}">${Object.entries(PRIOS).map(([k,v])=>`<option value="${k}"${t.prio===k?' selected':''}>${v.label.replace(' Priorität','')}</option>`).join('')}</select>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="s-grp"><div class="s-h">Einträge</div><div class="s-card" id="jnlCard"></div></div>
-
-      <div class="s-grp"><div class="s-h">Zeit</div>
-        <div class="s-card">
-          <div class="s-field s-inline"><span class="fl">Start / Fällig</span><input type="date" id="f-start" value="${t.start||''}"></div>
-          <div class="s-field s-inline"><span class="fl">Ende</span><input type="date" id="f-end" value="${t.end||''}"></div>
-        </div></div>
-      <div class="s-grp"><div class="s-h">Infos</div>
-        <div class="s-card">
-          <div class="s-field"><div class="fl">Ansprechpartner / Absprachen</div><input id="f-contacts" placeholder="z.B. Elektriker Meier, Tel. …" value="${escAttr(t.contacts)}"></div>
-          <div class="s-field"><div class="fl">Kosten / Budget</div><input id="f-cost" placeholder="z.B. 4.500 €" value="${escAttr(t.cost)}"></div>
-          <div class="s-field"><div class="fl">Notizen</div><textarea id="f-notes" placeholder="Details, offene Fragen, Material…">${esc(t.notes)}</textarea></div>
-        </div></div>
-      <div class="s-grp"><div class="s-h">Checkliste</div><div class="s-card" id="clCard"></div></div>
-      <div class="s-grp"><div class="s-h">Dateien & Fotos</div><div class="s-card" id="fileCard"></div></div>
-      <div class="s-grp"><div class="s-h">Unteraufgaben</div><div class="s-card" id="subCard"></div></div>
-      ${path.length>1?`<div class="s-grp"><div class="s-h">Verschachtelung</div>
-        <div class="s-card"><div class="s-field s-inline"><span class="fl">Unteraufgabe von</span><span style="color:var(--label2);font-weight:500">${esc(path[path.length-2].title||'…')}</span></div></div>
-        <button class="btn-big" id="detachBtn" style="color:var(--blue)">Aus Hauptaufgabe lösen</button></div>`:''}
+      <div class="s-grp"><div class="s-card" id="jnlCard"></div></div>
+      <button class="details-toggle" id="detailsToggle">
+        <span>Weitere Details</span>
+        <svg class="dt-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div id="extraDetails">
+        <div class="s-grp"><div class="s-h">Zeit</div>
+          <div class="s-card">
+            <div class="s-field s-inline"><span class="fl">Start / Fällig</span><input type="date" id="f-start" value="${t.start||''}"></div>
+            <div class="s-field s-inline"><span class="fl">Ende</span><input type="date" id="f-end" value="${t.end||''}"></div>
+          </div></div>
+        <div class="s-grp"><div class="s-h">Infos</div>
+          <div class="s-card">
+            <div class="s-field"><div class="fl">Ansprechpartner / Absprachen</div><input id="f-contacts" placeholder="z.B. Elektriker Meier, Tel. …" value="${escAttr(t.contacts)}"></div>
+            <div class="s-field"><div class="fl">Kosten / Budget</div><input id="f-cost" placeholder="z.B. 4.500 €" value="${escAttr(t.cost)}"></div>
+            <div class="s-field"><div class="fl">Notizen</div><textarea id="f-notes" placeholder="Details, offene Fragen, Material…">${esc(t.notes)}</textarea></div>
+          </div></div>
+        <div class="s-grp"><div class="s-h">Checkliste</div><div class="s-card" id="clCard"></div></div>
+        <div class="s-grp"><div class="s-h">Dateien & Fotos</div><div class="s-card" id="fileCard"></div></div>
+        <div class="s-grp"><div class="s-h">Unteraufgaben</div><div class="s-card" id="subCard"></div></div>
+        ${path.length>1?`<div class="s-grp"><div class="s-h">Verschachtelung</div>
+          <div class="s-card"><div class="s-field s-inline"><span class="fl">Unteraufgabe von</span><span style="color:var(--label2);font-weight:500">${esc(path[path.length-2].title||'…')}</span></div></div>
+          <button class="btn-big" id="detachBtn" style="color:var(--blue)">Aus Hauptaufgabe lösen</button></div>`:''}
+      </div>
       <button class="btn-big btn-done" id="doneToggle">${t.done?'↺ Wieder öffnen':'✓ Als erledigt markieren'}</button>
       <input type="file" id="fileInput" multiple style="display:none">
     </div>`;
@@ -642,8 +653,9 @@ function bindSheet(t){
   $('#f-notes').oninput=e=>{save('notes',e.target.value);e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px';};
   $('#f-start').onchange=e=>{save('start',e.target.value);logChange('BEARBEITET',t.title,{feld:'Start'});};
   $('#f-end').onchange=e=>{save('end',e.target.value);logChange('BEARBEITET',t.title,{feld:'Ende'});};
-  $('#sel-cat').onchange=e=>{t.cat=e.target.value;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Kategorie'});};
-  $('#sel-prio').onchange=e=>{t.prio=e.target.value;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Priorität'});};
+  $('#sel-cat').onchange=e=>{t.cat=e.target.value;e.target.style.color=CATS[t.cat].color;$('#cat-dot').style.background=CATS[t.cat].color;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Kategorie'});};
+  $('#sel-prio').onchange=e=>{t.prio=e.target.value;e.target.style.color=PRIOS[t.prio].color;$('#prio-dot').style.background=PRIOS[t.prio].color;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Priorität'});};
+  $('#detailsToggle').onclick=()=>{const open=$('#extraDetails').classList.toggle('open');$('#detailsToggle .dt-chev').classList.toggle('open',open);};
   $$('.crumbs a').forEach(a=>a.onclick=()=>openSheet(a.dataset.go));
   $('#doneToggle').onclick=()=>{toggleDone(t.id);openSheet(t.id);};
   const db2=$('#detachBtn');if(db2)db2.onclick=()=>{logChange('GELOEST',t.title);detachTask(t.id);scheduleSave();renderAll();openSheet(t.id);toast('Als Hauptaufgabe gelöst');};
@@ -720,12 +732,15 @@ function renderJournal(t){
       const r=document.createElement('div');r.className='jnl-row';
       const dt=new Date(e.ts);
       r.innerHTML=
-        '<div class="jnl-header">'+
-        '<span class="jnl-ts">'+fmtJnlDate(dt)+'</span>'+
-        (e.author?'<span class="jnl-author"> · '+esc(e.author)+'</span>':'')+
-        '<button class="jnl-del ic-btn">'+UI.trash+'</button>'+
-        '</div>'+
-        '<div class="jnl-text">'+esc(e.text)+'</div>';
+        '<div class="jnl-bar" style="background:'+CATS[t.cat].color+'"></div>'+
+        '<div class="jnl-body">'+
+          '<div class="jnl-header">'+
+          '<span class="jnl-ts">'+fmtJnlDate(dt)+'</span>'+
+          (e.author?'<span class="jnl-author"> · '+esc(e.author)+'</span>':'')+
+          '<button class="jnl-del ic-btn">'+UI.trash+'</button>'+
+          '</div>'+
+          '<div class="jnl-text">'+esc(e.text)+'</div>'+
+        '</div>';
       r.querySelector('.jnl-del').onclick=()=>{
         t.journal=t.journal.filter(x=>x.id!==e.id);
         scheduleSave();renderJournal(t);
@@ -735,7 +750,7 @@ function renderJournal(t){
     box.appendChild(list);
   }
   const add=document.createElement('div');add.className='jnl-add';
-  add.innerHTML='<textarea class="jnl-input" placeholder="Neuer Eintrag…" rows="2"></textarea>'+
+  add.innerHTML='<textarea class="jnl-input" placeholder="Neuer Eintrag…" rows="3"></textarea>'+
     '<button class="jnl-submit">Eintragen</button>';
   const doAdd=()=>{
     const v=add.querySelector('textarea').value.trim();if(!v)return;

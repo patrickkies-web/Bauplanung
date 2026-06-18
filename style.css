@@ -352,20 +352,31 @@ body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);back
 
 /* Art + Prio Dropdowns */
 .meta-row{display:flex;gap:1px;padding:0}
-.meta-field{flex:1;display:flex;flex-direction:column;padding:10px 14px;gap:4px}
+.meta-field{flex:1;display:flex;flex-direction:column;padding:10px 14px;gap:5px}
 .meta-field+.meta-field{border-left:.5px solid var(--sep-soft)}
 .meta-field .fl{font-size:11px;color:var(--label3);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-.meta-field select{background:none;border:none;font-size:16px;font-family:inherit;color:var(--label);font-weight:500;padding:0;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;width:100%}
+.sel-wrap{display:flex;align-items:center;gap:7px}
+.sel-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.meta-field select{background:none;border:none;font-size:16px;font-family:inherit;font-weight:600;padding:0;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;flex:1}
 
 /* Journal / Einträge */
 .jnl-list{display:flex;flex-direction:column}
-.jnl-row{padding:10px 14px;border-bottom:.5px solid var(--sep-soft)}
+.jnl-row{display:flex;align-items:stretch;border-bottom:.5px solid var(--sep-soft)}
 .jnl-row:last-child{border-bottom:none}
-.jnl-header{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.jnl-bar{width:3px;border-radius:2px;margin:12px 0 12px 12px;flex-shrink:0}
+.jnl-body{flex:1;padding:12px 14px 12px 10px}
+.jnl-header{display:flex;align-items:center;gap:4px;margin-bottom:5px}
 .jnl-ts{font-size:12px;color:var(--label3);font-weight:500;flex:1;white-space:nowrap}
 .jnl-author{font-size:12px;color:var(--label2);font-weight:600;white-space:nowrap}
 .jnl-del{color:var(--label3);margin-left:4px;flex-shrink:0}
-.jnl-text{font-size:15px;color:var(--label);line-height:1.4}
-.jnl-add{padding:10px 14px;display:flex;flex-direction:column;gap:8px;border-top:.5px solid var(--sep-soft)}
-.jnl-input{width:100%;box-sizing:border-box;font-size:15px;font-family:inherit;resize:none;padding:8px 10px;background:var(--fill);border:none;border-radius:10px;min-height:56px;color:var(--label);outline:none}
-.jnl-submit{align-self:flex-end;font-size:14px;font-weight:600;color:var(--blue);padding:6px 14px;background:var(--fill);border-radius:10px}
+.jnl-text{font-size:15px;color:var(--label);line-height:1.45}
+.jnl-add{padding:12px 14px;display:flex;flex-direction:column;gap:10px;border-top:.5px solid var(--sep-soft)}
+.jnl-input{width:100%;box-sizing:border-box;font-size:15px;font-family:inherit;resize:none;padding:10px 12px;background:var(--fill);border:none;border-radius:12px;min-height:80px;color:var(--label);outline:none;line-height:1.45}
+.jnl-submit{align-self:flex-end;font-size:14px;font-weight:600;color:var(--blue);padding:8px 18px;background:var(--fill);border-radius:12px}
+
+/* Collapsible details */
+.details-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 16px;font-size:15px;font-weight:500;color:var(--label2);background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dt-chev{width:18px;height:18px;color:var(--label3);transition:transform .2s;flex-shrink:0}
+.dt-chev.open{transform:rotate(90deg)}
+#extraDetails{display:none}
+#extraDetails.open{display:block}
