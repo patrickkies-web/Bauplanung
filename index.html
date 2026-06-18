@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Bauleiter</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="navbar">
+    <div class="nav-row">
+      <span class="save-ind" id="saveInd">gesichert</span>
+      <svg class="brand-mark" viewBox="0 0 30 30" fill="none" aria-label="Bauleiter">
+        <path d="M5 25V12L15 5l10 7v13" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M4 25h22" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
+        <path d="M11.5 25v-6h7v6" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
+        <circle cx="15" cy="12.5" r="1.7" fill="#007AFF"/>
+      </svg>
+      <div class="nav-actions">
+        <button class="btn-heute" id="heuteBtn">Heute</button>
+        <button class="nav-add" id="addBtn" aria-label="Hinzufügen">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#007AFF"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="view active" id="view-timeline">
+      <div class="tl-scroll" id="tlScroll"><div class="tl-inner" id="tlInner"></div></div>
+      <div class="tray">
+        <div class="tray-h">Nicht terminiert</div>
+        <div class="tray-scroll" id="trayScroll"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-tree">
+      <div class="scroll-pane"><div class="tree-wrap" id="tree"></div></div>
+    </section>
+
+    <section class="view" id="view-todo">
+      <div class="scroll-pane"><div id="todoList"></div></div>
+    </section>
+  </main>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-view="timeline">
+      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="7" r="2.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="2.4" fill="currentColor" stroke="none"/><path d="M14.4 7H20M4 15h5.6"/></svg></span>
+      <span class="lbl">Zeitstrahl</span>
+    </button>
+    <button class="tab" data-view="tree">
+      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 12h12M12 18h8"/><circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="18" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+      <span class="lbl">Struktur</span>
+    </button>
+    <button class="tab" data-view="todo">
+      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg><span class="bdg" id="todoBadge" style="display:none">0</span></span>
+      <span class="lbl">To-dos</span>
+    </button>
+  </nav>
+</div>
+
+<!-- modal sheet -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+
+<!-- action sheet -->
+<div class="actionsheet" id="actionSheet">
+  <div class="as-grp">
+    <div class="as-title">Was möchtest du hinzufügen?</div>
+    <button class="as-item" data-cat="termin"><span class="ad" style="background:var(--c-termin)"></span>Termin</button>
+    <button class="as-item" data-cat="arbeit"><span class="ad" style="background:var(--c-arbeit)"></span>Handwerkliche Arbeit</button>
+    <button class="as-item" data-cat="absprache"><span class="ad" style="background:var(--c-absprache)"></span>Absprache</button>
+    <button class="as-item" data-cat="planung"><span class="ad" style="background:var(--c-planung)"></span>Planung</button>
+    <button class="as-item" data-cat="todo"><span class="ad" style="background:var(--c-todo)"></span>To-do</button>
+  </div>
+  <button class="as-cancel" id="asCancel">Abbrechen</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

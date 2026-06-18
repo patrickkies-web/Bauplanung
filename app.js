@@ -1,431 +1,3 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Bauleiter</title>
-<style>
-:root{
-  --bg:#F2F2F7;
-  --bg2:#FFFFFF;
-  --grouped:#F2F2F7;
-  --card:#FFFFFF;
-  --label:#1C1C1E;
-  --label2:rgba(60,60,67,.6);
-  --label3:rgba(60,60,67,.3);
-  --sep:rgba(60,60,67,.29);
-  --sep-soft:rgba(60,60,67,.12);
-  --fill:rgba(118,118,128,.12);
-  --fill2:rgba(118,118,128,.08);
-  --blue:#007AFF;
-  --green:#34C759;
-  --red:#FF3B30;
-  --orange:#FF9500;
-  --yellow:#FFCC00;
-  --purple:#AF52DE;
-  --teal:#5AC8FA;
-  --gray:#8E8E93;
-  --chevron:#C7C7CC;
-  --c-arbeit:#FF9500;
-  --c-absprache:#007AFF;
-  --c-planung:#AF52DE;
-  --c-termin:#34C759;
-  --c-todo:#5AC8FA;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-input,textarea{-webkit-user-select:text;user-select:text}
-html,body{height:100%}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
-  background:var(--bg);color:var(--label);font-size:17px;line-height:1.35;
-  overflow:hidden;-webkit-font-smoothing:antialiased;letter-spacing:-.01em;
-}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,textarea,select{font-family:inherit;font-size:17px;color:var(--label);border:none;outline:none;background:none}
-::selection{background:rgba(0,122,255,.2)}
-
-#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
-
-/* Nav bar – schmal, mittiges App-Symbol */
-.navbar{
-  flex-shrink:0;background:rgba(249,249,249,.82);backdrop-filter:saturate(180%) blur(20px);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);
-  padding:5px 12px;border-bottom:.5px solid var(--sep);z-index:30;
-  padding-top:max(5px,env(safe-area-inset-top));
-}
-.nav-row{position:relative;display:flex;align-items:center;justify-content:center;min-height:40px}
-.brand-mark{height:27px;width:27px;color:var(--label);display:block}
-.nav-actions{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px}
-.nav-add{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--blue)}
-.nav-add:active{opacity:.4}
-.nav-add svg{width:25px;height:25px}
-.btn-heute{font-size:14px;font-weight:500;color:var(--blue);padding:5px 11px;background:var(--fill);border-radius:8px;white-space:nowrap}
-.btn-heute:active{opacity:.5}
-
-/* Segmented control (iOS) */
-.seg-ctrl{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin-top:12px;gap:0}
-.seg-ctrl button{
-  flex:1;padding:6px 4px;font-size:13px;font-weight:500;color:var(--label);border-radius:7px;
-  transition:.18s;position:relative;letter-spacing:-.01em;
-}
-.seg-ctrl button.on{background:var(--bg2);box-shadow:0 1px 4px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);font-weight:600}
-
-main{flex:1;position:relative;overflow:hidden}
-.view{position:absolute;inset:0;display:none;flex-direction:column}
-.view.active{display:flex}
-
-/* ============ VERTICAL TIMELINE = LISTE ============ */
-.tl-scroll{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;-webkit-overflow-scrolling:touch}
-.tl-inner{display:flex;flex-direction:column;padding:6px 16px 24px;min-height:100%}
-.month-sep{font-size:13px;color:var(--label2);padding:18px 4px 8px;font-weight:600;letter-spacing:.01em}
-.month-sep:first-child{padding-top:6px}
-.today-divider{display:flex;align-items:center;gap:10px;padding:14px 2px 14px}
-.today-divider .ln{flex:1;height:2px;background:var(--red);border-radius:2px}
-.today-divider .tg{font-size:11px;font-weight:700;color:#fff;background:var(--red);padding:3px 11px;border-radius:20px;letter-spacing:.04em}
-.today-divider .dt{font-size:11px;color:var(--red);font-weight:600}
-
-.tl-tile{
-  background:var(--card);border-radius:13px;
-  box-shadow:0 1px 3px rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.03);
-  padding:12px 4px 12px 14px;margin-bottom:9px;overflow:hidden;
-  display:flex;align-items:center;gap:11px;
-  border-left:4px solid var(--gray);touch-action:pan-y;transition:box-shadow .15s,transform .05s;
-}
-.tl-tile:active{background:var(--fill2)}
-.tl-tile.dragging{box-shadow:0 12px 32px rgba(0,0,0,.24);background:#fff;transform:scale(1.01)}
-.tl-tile.done{opacity:.55}
-.tl-tile.done .tt-title{text-decoration:line-through;color:var(--label2)}
-.tt-check{width:25px;height:25px;border-radius:50%;border:1.8px solid var(--label3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
-.tt-check.on{background:var(--green);border-color:var(--green)}
-.tt-check:active{transform:scale(.85)}
-.tt-body{flex:1;min-width:0}
-.tt-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
-.tt-meta{display:flex;align-items:center;gap:7px;margin-top:2px;font-size:13px;color:var(--label2);flex-wrap:wrap}
-.tt-prio{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.tag-cat-sm{font-size:11px;font-weight:600;color:#fff;padding:1px 7px;border-radius:20px}
-.tt-sub{font-size:11px;color:var(--label2);background:var(--fill);padding:1px 7px;border-radius:20px;font-weight:600}
-.tt-grip{width:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:18px;touch-action:none;cursor:grab}
-.tt-grip:active{color:var(--label2)}
-.tl-empty{font-size:14px;color:var(--label2);font-style:italic;padding:16px 4px;text-align:center}
-
-
-/* Tray (Nicht terminiert) – senkrechte Liste */
-.tray{flex-shrink:0;background:var(--bg2);border-top:.5px solid var(--sep);padding:9px 0 0;display:flex;flex-direction:column;max-height:42vh}
-.tray-h{font-size:12px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.03em;padding:0 16px 7px}
-.tray-scroll{display:flex;flex-direction:column;gap:7px;overflow-y:auto;overflow-x:hidden;padding:0 16px 12px;-webkit-overflow-scrolling:touch}
-.tray-chip{
-  background:var(--bg);border-radius:11px;padding:11px 6px 11px 13px;font-size:15px;font-weight:500;
-  display:flex;align-items:center;gap:9px;border-left:4px solid var(--gray);touch-action:pan-y;
-}
-.tray-chip:active{background:var(--fill)}
-.tray-chip.dragging{box-shadow:0 8px 24px rgba(0,0,0,.2);background:#fff}
-.tray-chip .tc-t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tray-chip .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.tray-grip{width:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:18px;touch-action:none;cursor:grab}
-.tray-grip:active{color:var(--label2)}
-.tray-empty{padding:2px 16px 12px;font-size:14px;color:var(--label2);font-style:italic}
-
-/* ============ GROUPED LISTS (Struktur / To-do) ============ */
-.scroll-pane{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:30px}
-.grp{margin:18px 0 0}
-.grp-h{font-size:13px;color:var(--label2);padding:0 16px 7px 32px;font-weight:400;display:flex;align-items:center;gap:7px}
-.grp-h .pdot{width:11px;height:11px;border-radius:50%}
-.grp-h .cnt{margin-left:auto;padding-right:0}
-.card-list{background:var(--card);border-radius:11px;margin:0 16px;overflow:hidden}
-.row{display:flex;align-items:center;gap:11px;padding:9px 14px;min-height:50px;position:relative;background:var(--card)}
-.row:active{background:var(--fill2)}
-.row+.row::before{content:'';position:absolute;top:0;left:48px;right:0;height:.5px;background:var(--sep)}
-.row.done .r-title{color:var(--label2);text-decoration:line-through}
-.r-check{width:25px;height:25px;border-radius:50%;border:1.8px solid var(--label3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;transition:.12s}
-.r-check.on{background:var(--green);border-color:var(--green)}
-.r-check:active{transform:scale(.85)}
-.r-body{flex:1;min-width:0}
-.r-title{font-size:16px;font-weight:400;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.r-sub{font-size:13px;color:var(--label2);margin-top:1px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.tag-cat{font-size:11px;font-weight:600;color:#fff;padding:1px 7px;border-radius:20px;letter-spacing:.01em}
-.r-when{font-size:14px;color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0}
-.r-when.over{color:var(--red);font-weight:500}
-.r-when.soon{color:var(--orange);font-weight:500}
-.chev{color:var(--chevron);font-size:18px;flex-shrink:0;margin-left:2px}
-.r-prio{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-
-/* tree specifics */
-.tree-wrap{padding-top:4px}
-.node-children{margin-left:0}
-.indent{display:inline-block;flex-shrink:0}
-.caret-btn{width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:13px;transition:.18s}
-.caret-btn.open{transform:rotate(90deg);color:var(--label2)}
-.caret-btn.empty{opacity:0;pointer-events:none}
-.grip{width:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:17px;touch-action:none;margin-left:auto}
-.add-row{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:46px;background:var(--card);color:var(--blue);font-size:16px;font-weight:400}
-.add-row:active{background:var(--fill2)}
-.add-row .plus{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:300}
-.row.drag-over{box-shadow:inset 0 0 0 2px var(--blue)}
-.empty-pane{text-align:center;padding:64px 30px;color:var(--label2)}
-.empty-pane .ic{font-size:46px;margin-bottom:10px}
-.empty-pane h3{font-size:19px;font-weight:600;color:var(--label);margin-bottom:5px}
-.empty-pane p{font-size:15px}
-
-/* ============ TAB BAR ============ */
-.tabbar{
-  flex-shrink:0;display:flex;background:rgba(249,249,249,.94);backdrop-filter:saturate(180%) blur(20px);
-  -webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);
-  padding-bottom:env(safe-area-inset-bottom);z-index:30;
-}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--gray)}
-.tab svg{width:26px;height:26px}
-.tab .lbl{font-size:10px;font-weight:500;letter-spacing:.01em}
-.tab .bdg{position:absolute;top:3px;margin-left:18px;background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:0 4px}
-.tab.on{color:var(--blue)}
-.tab:active{opacity:.5}
-.tab .wrap{position:relative;display:flex}
-
-/* ============ SHEETS / MODAL ============ */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:none;opacity:0;transition:opacity .25s}
-.scrim.open{display:block;opacity:1}
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;background:var(--bg);z-index:51;
-  border-radius:14px 14px 0 0;max-height:94vh;display:flex;flex-direction:column;
-  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
-  padding-bottom:env(safe-area-inset-bottom);
-}
-.sheet.open{transform:translateY(0)}
-@media(min-width:640px){.sheet{left:50%;right:auto;width:560px;transform:translateX(-50%) translateY(100%);border-radius:14px;bottom:auto;top:50%;margin-top:-44vh;max-height:88vh}.sheet.open{transform:translateX(-50%) translateY(0)}}
-.grabber{width:36px;height:5px;border-radius:3px;background:var(--label3);margin:7px auto 0}
-.sheet-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;border-bottom:.5px solid var(--sep)}
-.sheet-nav .nt{font-size:17px;font-weight:600}
-.sheet-nav button{font-size:17px;color:var(--blue);font-weight:400}
-.sheet-nav button.done{font-weight:600}
-.sheet-nav button:active{opacity:.4}
-.crumbs{font-size:13px;color:var(--label2);padding:8px 16px 0;display:flex;gap:5px;flex-wrap:wrap}
-.crumbs a{color:var(--blue)}
-.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 0 24px;flex:1}
-.titlebox{margin:0 16px 18px}
-.title-input{font-size:24px;font-weight:700;width:100%;letter-spacing:-.02em;padding:4px 0}
-.title-input::placeholder{color:var(--label3)}
-.s-grp{margin:0 0 22px}
-.s-h{font-size:13px;color:var(--label2);padding:0 16px 7px 16px;text-transform:uppercase;letter-spacing:.02em;font-weight:400}
-.s-card{background:var(--card);border-radius:11px;margin:0 16px;overflow:hidden}
-.s-field{padding:11px 14px;position:relative}
-.s-field+.s-field::before{content:'';position:absolute;top:0;left:14px;right:0;height:.5px;background:var(--sep)}
-.s-field input,.s-field textarea{width:100%;font-size:16px}
-.s-field textarea{resize:none;min-height:84px;line-height:1.45}
-.s-field .fl{font-size:12px;color:var(--label2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.02em}
-.s-inline{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.s-inline .fl{margin:0;text-transform:none;font-size:16px;color:var(--label)}
-.s-inline input[type=date]{text-align:right;color:var(--blue);font-size:16px;background:var(--fill);padding:4px 9px;border-radius:7px}
-.pillrow{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
-.pill{padding:7px 14px;border-radius:20px;font-size:14px;font-weight:500;background:var(--fill);color:var(--label)}
-.pill.on{color:#fff}
-.cl-row{display:flex;align-items:center;gap:11px;padding:10px 14px;position:relative}
-.cl-row+.cl-row::before,.cl-add::before{content:'';position:absolute;top:0;left:44px;right:0;height:.5px;background:var(--sep)}
-.cl-box{width:23px;height:23px;border-radius:50%;border:1.8px solid var(--label3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
-.cl-box.on{background:var(--green);border-color:var(--green)}
-.cl-row input{flex:1;font-size:16px}
-.cl-row input.done{text-decoration:line-through;color:var(--label2)}
-.cl-x{color:var(--label3);font-size:19px;padding:0 4px}
-.cl-add{display:flex;align-items:center;gap:11px;padding:10px 14px;position:relative}
-.cl-add .plus{width:23px;height:23px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.cl-add input{flex:1;font-size:16px}
-.file-add{display:flex;align-items:center;gap:11px;padding:11px 14px;color:var(--blue);font-size:16px}
-.file-add:active{background:var(--fill2)}
-.file-add .ic{width:23px;height:23px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.file-row{display:flex;align-items:center;gap:11px;padding:10px 14px;position:relative}
-.file-row+.file-row::before,.file-row+.file-add::before{content:'';position:absolute;top:0;left:14px;right:0;height:.5px;background:var(--sep)}
-.file-ic{width:38px;height:38px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700}
-.file-thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0}
-.file-info{flex:1;min-width:0}
-.file-n{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.file-s{font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums}
-.file-dl{color:var(--blue);font-size:20px;padding:4px}
-.file-rm{color:var(--red);font-size:18px;padding:4px}
-.sub-row{display:flex;align-items:center;gap:11px;padding:11px 14px;position:relative}
-.sub-row+.sub-row::before,.sub-row+.cl-add::before{content:'';position:absolute;top:0;left:44px;right:0;height:.5px;background:var(--sep)}
-.sub-row .sc{width:22px;height:22px;border-radius:50%;border:1.8px solid var(--label3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px}
-.sub-row .sc.on{background:var(--green);border-color:var(--green)}
-.sub-row .st{flex:1;font-size:16px}
-.sub-row.done .st{text-decoration:line-through;color:var(--label2)}
-.sub-row .chev{color:var(--chevron);font-size:17px}
-.btn-big{margin:8px 16px 0;border-radius:11px;background:var(--card);text-align:center;padding:13px;font-size:16px;font-weight:500}
-.btn-big:active{background:var(--fill)}
-.btn-done{color:var(--green)}
-.btn-del{color:var(--red)}
-
-/* Action sheet (Hinzufügen) */
-.actionsheet{position:fixed;left:8px;right:8px;bottom:8px;z-index:51;transform:translateY(140%);transition:transform .32s cubic-bezier(.32,.72,0,1);padding-bottom:env(safe-area-inset-bottom)}
-.actionsheet.open{transform:translateY(0)}
-@media(min-width:640px){.actionsheet{left:50%;width:380px;margin-left:-190px}}
-.as-grp{background:rgba(255,255,255,.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;overflow:hidden;margin-bottom:8px}
-.as-title{text-align:center;font-size:13px;color:var(--label2);padding:15px 16px 11px;border-bottom:.5px solid var(--sep)}
-.as-item{display:flex;align-items:center;gap:13px;width:100%;padding:15px 18px;font-size:18px;color:var(--blue);position:relative}
-.as-item+.as-item::before{content:'';position:absolute;top:0;left:0;right:0;height:.5px;background:var(--sep)}
-.as-item:active{background:var(--fill)}
-.as-item .ad{width:14px;height:14px;border-radius:4px;flex-shrink:0}
-.as-cancel{background:var(--bg2);border-radius:14px;width:100%;padding:16px;font-size:18px;font-weight:600;color:var(--blue)}
-.as-cancel:active{background:var(--fill)}
-
-.toast{position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:rgba(40,40,42,.96);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:500;z-index:80;opacity:0;transition:.28s;pointer-events:none;backdrop-filter:blur(10px)}
-.toast.show{transform:translateX(-50%);opacity:1}
-
-.save-ind{font-size:11px;color:var(--label3);position:absolute;top:50%;left:2px;transform:translateY(-50%);transition:.3s;opacity:0}
-.save-ind.show{opacity:1}
-
-/* ============ MODERN REFRESH ============ */
-body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);background-attachment:fixed}
-.svgi{width:20px;height:20px;display:block}
-
-/* Kategorie-Icon-Badge */
-.cat-badge{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.14)}
-.cat-badge svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-
-/* weichere Karten, größere Radien, keine harten Farbbalken mehr */
-.card-list,.s-card{border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(20,24,40,.05)}
-.tray-chip{border-left:none;border-radius:14px;padding:9px 6px 9px 11px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.tl-tile{
-  border-left:none;border-radius:16px;padding:10px 6px 10px 11px;margin-bottom:10px;
-  box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(20,24,40,.06);
-  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,opacity .2s;
-}
-.tl-tile:active{background:var(--card);transform:scale(.99)}
-.tt-body{margin-left:1px}
-.tt-meta{gap:5px}
-.tt-meta .mid{color:var(--label3)}
-.cat-name{font-weight:600}
-.tt-prio{margin-left:1px}
-.tt-sub{margin-left:1px}
-.tt-check{order:3}
-.tt-grip{order:4}
-.tt-grip svg,.tray-grip svg,.grip svg{width:20px;height:20px}
-
-/* Drag: Quelle ausblenden, Ghost anheben, Einfügelinie */
-.tl-tile.drag-src,.tray-chip.drag-src{opacity:.28;transform:scale(.97);box-shadow:none}
-.tl-tile.done .cat-badge,.row.done .cat-badge,.sub-row.done .cat-badge{filter:grayscale(1);opacity:.5;box-shadow:none}
-.tl-tile.done{background:#FAFAFB}
-.drag-ghost{box-shadow:0 18px 44px rgba(20,24,40,.3)!important;opacity:.97;will-change:transform;transition:opacity .17s ease}
-.drop-line{position:absolute;left:1px;right:1px;height:3px;border-radius:3px;background:var(--blue);z-index:25;pointer-events:none;opacity:0;transition:top .13s cubic-bezier(.2,.8,.2,1),opacity .15s;box-shadow:0 0 0 5px rgba(0,122,255,.1)}
-.drop-line.show{opacity:1}
-.drop-line::before{content:'';position:absolute;left:-4px;top:-3.5px;width:10px;height:10px;border-radius:50%;background:var(--blue)}
-
-/* Tree/To-do Zeilen */
-.tag-cat{display:none}
-.r-sub{gap:5px}
-.r-prio{margin-left:2px}
-.grip{color:var(--label3)}
-
-/* SVG-Buttons (Datei/Checkliste) */
-.ic-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;padding:0}
-.ic-btn:active{background:var(--fill)}
-.file-ic{border-radius:9px;background:linear-gradient(135deg,#5B6470,#3A414B);font-size:10px}
-.file-thumb{border-radius:9px}
-
-/* Pillen im Sheet moderner */
-.pill{border-radius:11px;transition:transform .12s,background .12s}
-.pill:active{transform:scale(.94)}
-.pill.on{box-shadow:0 2px 8px rgba(0,0,0,.14)}
-
-/* Empty-States */
-.empty-pane .ic{width:76px;height:76px;border-radius:24px;background:var(--fill);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--label2);font-size:0}
-.empty-pane .ic svg{width:36px;height:36px}
-
-/* Heute-Trenner moderner */
-.today-divider .tg{box-shadow:0 2px 8px rgba(255,59,48,.3)}
-
-/* Navbar Titel etwas weicher */
-.nav-title{font-weight:700}
-.tl-inner{position:relative}
-
-/* Verschachtelung: Pfeil auf Zeitstrahl, Einordnen-Highlight, Unterkacheln */
-.tt-caret{width:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--label3);font-size:17px;font-weight:600;background:none;transition:transform .18s;margin-left:-2px}
-.tt-caret.open{transform:rotate(90deg);color:var(--label2)}
-.tt-caret.sp{visibility:hidden;width:14px}
-.tl-tile.child{padding-top:8px;padding-bottom:8px;background:#FCFCFE;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.tl-tile.child .tt-title{font-size:15px}
-.tl-tile.nest-target,.tray-chip.nest-target{box-shadow:0 0 0 2.5px var(--blue),0 6px 18px rgba(0,122,255,.18)!important;background:#F2F8FF}
-.tl-tile.nest-target::after{content:'einordnen';position:absolute;right:46px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--blue);background:#fff;padding:2px 8px;border-radius:20px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
-.tl-tile{position:relative}
-
-/* Tree: Einordnen & Einfügelinien */
-.row{position:relative}
-.row.nest-target{box-shadow:inset 0 0 0 2px var(--blue);border-radius:12px;background:#F2F8FF}
-.row.ins-before::after,.row.ins-after::after{content:'';position:absolute;left:46px;right:10px;height:3px;border-radius:3px;background:var(--blue);z-index:5}
-.row.ins-before::after{top:-1px}
-.row.ins-after::after{bottom:-1px}
-</style>
-</head>
-<body>
-<div id="app">
-  <header class="navbar">
-    <div class="nav-row">
-      <span class="save-ind" id="saveInd">gesichert</span>
-      <svg class="brand-mark" viewBox="0 0 30 30" fill="none" aria-label="Bauleiter">
-        <path d="M5 25V12L15 5l10 7v13" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round"/>
-        <path d="M4 25h22" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M11.5 25v-6h7v6" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
-        <circle cx="15" cy="12.5" r="1.7" fill="#007AFF"/>
-      </svg>
-      <div class="nav-actions">
-        <button class="btn-heute" id="heuteBtn">Heute</button>
-        <button class="nav-add" id="addBtn" aria-label="Hinzufügen">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#007AFF"/><path d="M12 7v10M7 12h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <section class="view active" id="view-timeline">
-      <div class="tl-scroll" id="tlScroll"><div class="tl-inner" id="tlInner"></div></div>
-      <div class="tray">
-        <div class="tray-h">Nicht terminiert</div>
-        <div class="tray-scroll" id="trayScroll"></div>
-      </div>
-    </section>
-
-    <section class="view" id="view-tree">
-      <div class="scroll-pane"><div class="tree-wrap" id="tree"></div></div>
-    </section>
-
-    <section class="view" id="view-todo">
-      <div class="scroll-pane"><div id="todoList"></div></div>
-    </section>
-  </main>
-
-  <nav class="tabbar" id="tabbar">
-    <button class="tab on" data-view="timeline">
-      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="7" r="2.4" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="2.4" fill="currentColor" stroke="none"/><path d="M14.4 7H20M4 15h5.6"/></svg></span>
-      <span class="lbl">Zeitstrahl</span>
-    </button>
-    <button class="tab" data-view="tree">
-      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M8 12h12M12 18h8"/><circle cx="4.5" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="18" r="1.1" fill="currentColor" stroke="none"/></svg></span>
-      <span class="lbl">Struktur</span>
-    </button>
-    <button class="tab" data-view="todo">
-      <span class="wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg><span class="bdg" id="todoBadge" style="display:none">0</span></span>
-      <span class="lbl">To-dos</span>
-    </button>
-  </nav>
-</div>
-
-<!-- modal sheet -->
-<div class="scrim" id="scrim"></div>
-<div class="sheet" id="sheet"></div>
-
-<!-- action sheet -->
-<div class="actionsheet" id="actionSheet">
-  <div class="as-grp">
-    <div class="as-title">Was möchtest du hinzufügen?</div>
-    <button class="as-item" data-cat="termin"><span class="ad" style="background:var(--c-termin)"></span>Termin</button>
-    <button class="as-item" data-cat="arbeit"><span class="ad" style="background:var(--c-arbeit)"></span>Handwerkliche Arbeit</button>
-    <button class="as-item" data-cat="absprache"><span class="ad" style="background:var(--c-absprache)"></span>Absprache</button>
-    <button class="as-item" data-cat="planung"><span class="ad" style="background:var(--c-planung)"></span>Planung</button>
-    <button class="as-item" data-cat="todo"><span class="ad" style="background:var(--c-todo)"></span>To-do</button>
-  </div>
-  <button class="as-cancel" id="asCancel">Abbrechen</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
 "use strict";
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
@@ -534,9 +106,8 @@ function renderAll(){
   if(currentView==='todo')renderTodo();
 }
 
-/* ===== TIMELINE = senkrechte Liste ===== */
+/* ===== TIMELINE ===== */
 function dateForDrop(clientY,excludeId){
-  // Nachbarn anhand der vorhandenen Kacheln (nach Datum sortiert) bestimmen
   const tiles=[...$('#tlInner').querySelectorAll('.tl-tile')].filter(el=>el.dataset.id!==excludeId);
   let above=null,below=null;
   for(const el of tiles){
@@ -556,7 +127,7 @@ function detachTask(id){const f=findTask(id);if(!f||!f.parent)return false;const
 function nestUnder(id,targetId){
   if(id===targetId)return false;
   const src=findTask(id),tgt=findTask(targetId);if(!src||!tgt)return false;
-  if(subtreeIds(src.task).includes(targetId))return false; // kein Zyklus
+  if(subtreeIds(src.task).includes(targetId))return false;
   if(tgt.task.children.some(c=>c.id===id))return false;
   const i=src.list.findIndex(x=>x.id===id);const[m]=src.list.splice(i,1);
   tgt.task.children.push(m);openMap[targetId]=true;
@@ -634,7 +205,6 @@ function renderTray(){
   });
 }
 
-/* Drag am Griff: in Lücke ablegen = als Hauptaufgabe terminieren/lösen; auf eine Kachel ablegen = einordnen (Unteraufgabe). */
 function attachTileDrag(handle,tile,task){attachDateDrag(handle,tile,task,false);}
 function attachDateDrag(handle,srcEl,task,fromTray){
   let active=false,ghost=null,moved=false,sx,sy,pid=null,line=null,autoTimer=null,lastY=0;
@@ -644,7 +214,6 @@ function attachDateDrag(handle,srcEl,task,fromTray){
   const clearNest=()=>{$$('.tl-tile.nest-target').forEach(el=>el.classList.remove('nest-target'));};
   const updateIndicator=clientY=>{
     const tiles=[...inner().querySelectorAll('.tl-tile')];
-    // 1) Einordnen, wenn der Finger mittig über einer Kachel ist (nicht über sich selbst/Nachkommen)
     let nestEl=null;
     for(const el of tiles){
       if(excludeIds.includes(el.dataset.id))continue;
@@ -657,7 +226,6 @@ function attachDateDrag(handle,srcEl,task,fromTray){
       if(line)line.classList.remove('show');
       return;
     }
-    // 2) sonst: Lücke zwischen Top-Level-Kacheln -> als Hauptaufgabe
     mode='top';nestId=null;clearNest();
     ensureLine();line.classList.add('show');
     const tops=tiles.filter(el=>el.dataset.depth==='0'&&!excludeIds.includes(el.dataset.id));
@@ -708,11 +276,10 @@ function attachDateDrag(handle,srcEl,task,fromTray){
     const sc=$('#tlScroll');const r=sc.getBoundingClientRect();
     if(py<r.top-40||py>r.bottom+40){renderTimeline();return;}
     if(m==='nest'&&nId){
-      if(nestUnder(task.id,nId)){const tg=findTask(nId);scheduleSave();renderAll();toast('Einsortiert unter „'+esc((tg&&tg.task.title)||'Aufgabe')+'“');}
+      if(nestUnder(task.id,nId)){const tg=findTask(nId);scheduleSave();renderAll();toast('Einsortiert unter „'+esc((tg&&tg.task.title)||'Aufgabe')+'"');}
       else{renderTimeline();toast('Hier nicht möglich');}
       return;
     }
-    // als Hauptaufgabe terminieren (löst aus evtl. Verschachtelung)
     const nd=dateForDrop(py,task.id);
     detachTask(task.id);
     const f=findTask(task.id);if(!f){renderTimeline();return;}
@@ -793,7 +360,7 @@ function attachReorder(grip,row,task,siblings){
       window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);row.style.opacity='';
       if(dragging&&drop){
         let ok=false,msg='';
-        if(drop.nest){ok=nestUnder(task.id,drop.t);const tg=findTask(drop.t);msg='Einsortiert unter „'+esc((tg&&tg.task.title)||'')+'“';}
+        if(drop.nest){ok=nestUnder(task.id,drop.t);const tg=findTask(drop.t);msg='Einsortiert unter „'+esc((tg&&tg.task.title)||'')+'"';}
         else{ok=moveRelative(task.id,drop.t,drop.after);msg='Verschoben';}
         if(ok){scheduleSave();renderTree();toast(msg);}else clear();
       }else clear();
@@ -842,15 +409,13 @@ function toggleDone(id){
   const f=findTask(id);if(!f)return;const t=f.task;
   t.done=!t.done;
   if(t.done){
-    // erledigt: über die Heute-Linie schieben (Vergangenheit). Datum auf heute ziehen, falls offen oder in der Zukunft.
     const s=parseD(t.start);
     if(!s||s>today()){t.start=isoD(today());t.end='';}
     t.completedOn=isoD(today());
     toast('Erledigt – in die Vergangenheit verschoben');
   }else{
-    // wieder geöffnet: zurück in „Nicht terminiert“ zur erneuten Zuteilung
     t.start='';t.end='';t.completedOn='';
-    toast('Zurück in „Nicht terminiert“');
+    toast('Zurück in „Nicht terminiert"');
   }
   scheduleSave();renderAll();
 }
@@ -1005,6 +570,3 @@ $('#scrim').addEventListener('click',()=>{closeAS();closeSheet();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAS();closeSheet();}});
 
 init();
-</script>
-</body>
-</html>
