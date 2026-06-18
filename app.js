@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.12';
+const VERSION='1.13';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -310,8 +310,19 @@ function renderTimeline(){
   if(!todayPlaced)inner.appendChild(todayDivider());
 }
 function appendTaskTiles(task,depth,inner){
-  inner.appendChild(buildTile(task,depth));
-  if(task.children.length&&openMap[task.id]){task.children.forEach(ch=>appendTaskTiles(ch,depth+1,inner));}
+  const tile=buildTile(task,depth);
+  inner.appendChild(tile);
+  if(!task.children.length)return;
+  if(openMap[task.id]!==false){
+    task.children.forEach(ch=>appendTaskTiles(ch,depth+1,inner));
+  } else if(depth===0){
+    tile.classList.add('has-peeked');
+    const pb=document.createElement('div');pb.className='peek-bars';
+    const n=Math.min(task.children.length,3);
+    for(let i=0;i<n;i++){const b=document.createElement('div');b.className='peek-bar';b.style.background=CATS[task.cat].color;pb.appendChild(b);}
+    pb.addEventListener('click',()=>{openMap[task.id]=true;renderTimeline();});
+    inner.appendChild(pb);
+  }
 }
 function todayDivider(){
   const el=document.createElement('div');el.className='today-divider';el.id='todayDiv';
@@ -340,7 +351,11 @@ function buildTile(t,depth){
   if(hasKids)tile.querySelector('.tt-caret').addEventListener('click',ev=>{ev.stopPropagation();openMap[t.id]=(openMap[t.id]===false);renderTimeline();});
   tile.querySelector('.tt-check').addEventListener('pointerdown',ev=>ev.stopPropagation());
   tile.querySelector('.tt-check').addEventListener('click',ev=>{ev.stopPropagation();toggleDone(t.id);});
-  tile.addEventListener('click',ev=>{if(ev.target.closest('.tt-grip')||ev.target.closest('.tt-check')||ev.target.closest('.tt-caret'))return;openSheet(t.id);});
+  tile.addEventListener('click',ev=>{
+    if(ev.target.closest('.tt-grip')||ev.target.closest('.tt-check')||ev.target.closest('.tt-caret'))return;
+    if(hasKids&&openMap[t.id]===false){openMap[t.id]=true;renderTimeline();}
+    else openSheet(t.id);
+  });
   attachTileDrag(tile.querySelector('.tt-grip'),tile,t);
   return tile;
 }
