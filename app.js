@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.6.1';
+const VERSION='1.7';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -59,8 +59,6 @@ function initFirebase(){
     if(typeof firebase==='undefined'||!firebaseConfig||!firebaseConfig.projectId)return;
     if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
     db=firebase.firestore();
-    syncActive=true;
-    updateSyncDot();
     setupRealTimeSync();
   }catch(e){
     db=null;syncActive=false;
@@ -76,6 +74,7 @@ function setupRealTimeSync(){
   if(!db)return;
   const stateKey=STATE_KEY.replace(/[:/]/g,'_');
   db.collection('data').doc(stateKey).onSnapshot(snap=>{
+    if(!syncActive){syncActive=true;updateSyncDot();}
     if(!snap.exists)return;
     const val=snap.data().value;
     if(val===lastSavedValue)return;
@@ -124,12 +123,20 @@ async function sSet(k,v){
   const key=k.replace(/[:/]/g,'_');
   let ok=false;
   try{localStorage.setItem(k,v);ok=true;}catch(e){}
-  if(db){try{await db.collection('data').doc(key).set({value:v});}catch(e){}}
+  if(db&&!k.startsWith(FILE_PREFIX)){
+    try{
+      const tout=new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000));
+      await Promise.race([db.collection('data').doc(key).set({value:v}),tout]);
+      if(!syncActive){syncActive=true;updateSyncDot();}
+    }catch(e){
+      if(syncActive){syncActive=false;updateSyncDot();}
+    }
+  }
   return ok;
 }
 async function sDel(k){
   const key=k.replace(/[:/]/g,'_');
-  if(db){try{await db.collection('data').doc(key).delete();}catch(e){}}
+  if(db&&!k.startsWith(FILE_PREFIX)){try{await db.collection('data').doc(key).delete();}catch(e){}}
   try{localStorage.removeItem(k);}catch(e){}
 }
 
@@ -176,7 +183,10 @@ function scheduleSave(){
     const value=JSON.stringify(state);
     lastSavedValue=value;
     const ok=await sSet(STATE_KEY,value);
-    if(ind){ind.textContent=ok?'gespeichert':'Fehler!';setTimeout(()=>ind.classList.remove('show'),ok?900:3000);}
+    if(ind){
+      ind.textContent=ok?(syncActive?'☁ gespeichert':'lokal gespeichert'):'Fehler!';
+      setTimeout(()=>ind.classList.remove('show'),ok?1400:3000);
+    }
   },420);
 }
 
@@ -265,7 +275,7 @@ function renderProtocol(){
 
   if(sub){
     const name=getUserName();
-    sub.innerHTML='<span class="sync-dot on" id="syncDot"></span>Live-Sync aktiv'+
+    sub.innerHTML='<span class="sync-dot'+(syncActive?' on':'')+'" style="display:inline-block;vertical-align:middle;margin-right:5px"></span>Live-Sync aktiv'+
       (name?' · angemeldet als <strong>'+esc(name)+'</strong>':'');
   }
 
