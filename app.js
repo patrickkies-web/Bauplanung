@@ -1,4 +1,5 @@
 "use strict";
+const VERSION='1.2';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -179,6 +180,7 @@ function countOpen(){let n=0;walk(state.tasks,t=>{if(!t.done)n++;});return n;}
 
 /* ===== INIT ===== */
 async function init(){
+  document.title='Bauleiter v'+VERSION;
   initFirebase();
   const raw=await sGet(STATE_KEY);
   if(raw){try{state=JSON.parse(raw);}catch(e){state={tasks:[]};}}
