@@ -350,6 +350,13 @@ body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);back
 .row.ins-before::after{top:-1px}
 .row.ins-after::after{bottom:-1px}
 
+/* Art + Prio Dropdowns */
+.meta-row{display:flex;gap:1px;padding:0}
+.meta-field{flex:1;display:flex;flex-direction:column;padding:10px 14px;gap:4px}
+.meta-field+.meta-field{border-left:.5px solid var(--sep-soft)}
+.meta-field .fl{font-size:11px;color:var(--label3);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.meta-field select{background:none;border:none;font-size:16px;font-family:inherit;color:var(--label);font-weight:500;padding:0;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;width:100%}
+
 /* Journal / Einträge */
 .jnl-list{display:flex;flex-direction:column}
 .jnl-row{padding:10px 14px;border-bottom:.5px solid var(--sep-soft)}

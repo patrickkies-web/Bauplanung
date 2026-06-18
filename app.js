@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.9';
+const VERSION='1.10';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -591,10 +591,20 @@ function openSheet(id){
     ${path.length>1?'<div class="crumbs">'+path.slice(0,-1).map(p=>'<a data-go="'+p.id+'">'+esc(p.title||'…')+'</a>').join(' › ')+' ›</div>':''}
     <div class="sheet-body">
       <div class="titlebox"><input class="title-input" id="f-title" placeholder="Titel…" value="${escAttr(t.title)}"></div>
-      <div class="s-grp"><div class="s-h">Art</div>
-        <div class="s-card"><div class="pillrow" id="seg-cat">${Object.entries(CATS).map(([k,v])=>`<button class="pill ${t.cat===k?'on':''}" data-v="${k}" style="${t.cat===k?'background:'+v.color:''}">${v.label}</button>`).join('')}</div></div></div>
-      <div class="s-grp"><div class="s-h">Priorität</div>
-        <div class="s-card"><div class="pillrow" id="seg-prio">${Object.entries(PRIOS).map(([k,v])=>`<button class="pill ${t.prio===k?'on':''}" data-v="${k}" style="${t.prio===k?'background:'+v.color:''}">${v.label.replace(' Priorität','')}</button>`).join('')}</div></div></div>
+      <div class="s-grp">
+        <div class="s-card">
+          <div class="meta-row">
+            <div class="meta-field">
+              <div class="fl">Art</div>
+              <select id="sel-cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}"${t.cat===k?' selected':''}>${v.label}</option>`).join('')}</select>
+            </div>
+            <div class="meta-field">
+              <div class="fl">Prio</div>
+              <select id="sel-prio">${Object.entries(PRIOS).map(([k,v])=>`<option value="${k}"${t.prio===k?' selected':''}>${v.label.replace(' Priorität','')}</option>`).join('')}</select>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="s-grp"><div class="s-h">Einträge</div><div class="s-card" id="jnlCard"></div></div>
 
       <div class="s-grp"><div class="s-h">Zeit</div>
@@ -632,8 +642,8 @@ function bindSheet(t){
   $('#f-notes').oninput=e=>{save('notes',e.target.value);e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px';};
   $('#f-start').onchange=e=>{save('start',e.target.value);logChange('BEARBEITET',t.title,{feld:'Start'});};
   $('#f-end').onchange=e=>{save('end',e.target.value);logChange('BEARBEITET',t.title,{feld:'Ende'});};
-  $$('#seg-cat .pill').forEach(b=>b.onclick=()=>{t.cat=b.dataset.v;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Kategorie'});openSheet(t.id);});
-  $$('#seg-prio .pill').forEach(b=>b.onclick=()=>{t.prio=b.dataset.v;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Priorität'});$$('#seg-prio .pill').forEach(x=>{x.classList.remove('on');x.style.background='';});b.classList.add('on');b.style.background=PRIOS[b.dataset.v].color;});
+  $('#sel-cat').onchange=e=>{t.cat=e.target.value;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Kategorie'});};
+  $('#sel-prio').onchange=e=>{t.prio=e.target.value;scheduleSave();logChange('BEARBEITET',t.title,{feld:'Priorität'});};
   $$('.crumbs a').forEach(a=>a.onclick=()=>openSheet(a.dataset.go));
   $('#doneToggle').onclick=()=>{toggleDone(t.id);openSheet(t.id);};
   const db2=$('#detachBtn');if(db2)db2.onclick=()=>{logChange('GELOEST',t.title);detachTask(t.id);scheduleSave();renderAll();openSheet(t.id);toast('Als Hauptaufgabe gelöst');};
