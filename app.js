@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.4';
+const VERSION='1.5';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -93,18 +93,14 @@ function setupRealTimeSync(){
 }
 
 async function sGet(k){
-  const key=k.replace(/[:/]/g,'_');
-  if(db){
-    try{const s=await db.collection('data').doc(key).get();if(s.exists)return s.data().value;}catch(e){}
-  }
   try{return localStorage.getItem(k);}catch(e){return null;}
 }
 async function sSet(k,v){
   const key=k.replace(/[:/]/g,'_');
-  if(db){
-    try{await db.collection('data').doc(key).set({value:v});localStorage.setItem(k,v);return true;}catch(e){}
-  }
-  try{localStorage.setItem(k,v);return true;}catch(e){return false;}
+  let ok=false;
+  try{localStorage.setItem(k,v);ok=true;}catch(e){}
+  if(db){try{await db.collection('data').doc(key).set({value:v});}catch(e){}}
+  return ok;
 }
 async function sDel(k){
   const key=k.replace(/[:/]/g,'_');
