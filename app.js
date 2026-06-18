@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.6';
+const VERSION='1.6.1';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -103,7 +103,8 @@ async function manualSync(){
   try{
     const key=STATE_KEY.replace(/[:/]/g,'_');
     const value=JSON.stringify(state);
-    await db.collection('data').doc(key).set({value});
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),6000));
+    await Promise.race([db.collection('data').doc(key).set({value}),timeout]);
     lastSavedValue=value;
     syncActive=true;
     updateSyncDot();
@@ -111,7 +112,7 @@ async function manualSync(){
   }catch(e){
     syncActive=false;
     updateSyncDot();
-    toast('Sync fehlgeschlagen');
+    toast(e.message==='timeout'?'Kein Netz – lokal gespeichert':'Sync fehlgeschlagen');
   }
   if(btn){btn.disabled=false;btn.classList.remove('syncing');}
 }
