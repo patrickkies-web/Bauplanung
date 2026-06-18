@@ -54,6 +54,13 @@ input,textarea,select{font-family:inherit;font-size:17px;color:var(--label);bord
 .nav-add svg{width:25px;height:25px}
 .btn-heute{font-size:14px;font-weight:500;color:var(--blue);padding:5px 11px;background:var(--fill);border-radius:8px;white-space:nowrap}
 .btn-heute:active{opacity:.5}
+.btn-sync{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--label2);border-radius:8px}
+.btn-sync svg{width:19px;height:19px}
+.btn-sync:active{opacity:.4}
+.btn-sync.syncing svg{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sync-dot{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--gray);border:1.5px solid var(--bg2)}
+.sync-dot.on{background:var(--green)}
 
 /* Segmented control (iOS) */
 .seg-ctrl{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin-top:12px;gap:0}
