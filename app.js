@@ -171,7 +171,7 @@ function fmtLong(d){return d.getDate()+'. '+MON[d.getMonth()]+' '+d.getFullYear(
 function fmtSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' KB';return (b/1048576).toFixed(1)+' MB';}
 
 /* ===== TASK HELPERS ===== */
-function newTask(cat){return {id:uid(),title:'',cat:cat||'todo',prio:'mittel',done:false,start:'',end:'',notes:'',contacts:'',cost:'',files:[],checklist:[],children:[]};}
+function newTask(cat){return {id:uid(),title:'',cat:cat||'todo',prio:'mittel',done:false,start:'',end:'',notes:'',contacts:'',cost:'',files:[],checklist:[],journal:[],children:[]};}
 function walk(list,fn,parent=null){list.forEach((t,i)=>{fn(t,parent,i);walk(t.children,fn,t);});}
 function findTask(id,list=state.tasks,parent=null){for(const t of list){if(t.id===id)return{task:t,parent,list};const r=findTask(id,t.children,t);if(r)return r;}return null;}
 function pathTo(id,list=state.tasks,acc=[]){for(const t of list){if(t.id===id)return[...acc,t];const r=pathTo(id,t.children,[...acc,t]);if(r)return r;}return null;}
@@ -630,6 +630,8 @@ function openSheet(id){
         <div class="s-card"><div class="pillrow" id="seg-cat">${Object.entries(CATS).map(([k,v])=>`<button class="pill ${t.cat===k?'on':''}" data-v="${k}" style="${t.cat===k?'background:'+v.color:''}">${v.label}</button>`).join('')}</div></div></div>
       <div class="s-grp"><div class="s-h">Priorität</div>
         <div class="s-card"><div class="pillrow" id="seg-prio">${Object.entries(PRIOS).map(([k,v])=>`<button class="pill ${t.prio===k?'on':''}" data-v="${k}" style="${t.prio===k?'background:'+v.color:''}">${v.label.replace(' Priorität','')}</button>`).join('')}</div></div></div>
+      <div class="s-grp"><div class="s-h">Einträge</div><div class="s-card" id="jnlCard"></div></div>
+
       <div class="s-grp"><div class="s-h">Zeit</div>
         <div class="s-card">
           <div class="s-field s-inline"><span class="fl">Start / Fällig</span><input type="date" id="f-start" value="${t.start||''}"></div>
@@ -651,7 +653,7 @@ function openSheet(id){
       <input type="file" id="fileInput" multiple style="display:none">
     </div>`;
   $('#scrim').classList.add('open');$('#sheet').classList.add('open');
-  bindSheet(t);renderChecklist(t);renderSub(t);renderFiles(t);
+  bindSheet(t);renderJournal(t);renderChecklist(t);renderSub(t);renderFiles(t);
 }
 function bindSheet(t){
   let titleChanged=false;
@@ -729,6 +731,52 @@ function handleFiles(list,t){
     reader.readAsDataURL(file);
   });
 }
+function fmtJnlDate(d){
+  const day=d.getDate()+'. '+MONS[d.getMonth()]+' '+d.getFullYear();
+  const time=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  return day+' · '+time;
+}
+function renderJournal(t){
+  const box=$('#jnlCard');if(!box)return;box.innerHTML='';
+  const entries=[...(t.journal||[])].reverse();
+  if(entries.length){
+    const list=document.createElement('div');list.className='jnl-list';
+    entries.forEach(e=>{
+      const r=document.createElement('div');r.className='jnl-row';
+      const dt=new Date(e.ts);
+      r.innerHTML=
+        '<div class="jnl-header">'+
+        '<span class="jnl-ts">'+fmtJnlDate(dt)+'</span>'+
+        (e.author?'<span class="jnl-author">'+esc(e.author)+'</span>':'')+
+        '<button class="jnl-del ic-btn">'+UI.trash+'</button>'+
+        '</div>'+
+        '<div class="jnl-text">'+esc(e.text)+'</div>';
+      r.querySelector('.jnl-del').onclick=()=>{
+        t.journal=t.journal.filter(x=>x.id!==e.id);
+        scheduleSave();renderJournal(t);
+      };
+      list.appendChild(r);
+    });
+    box.appendChild(list);
+  }
+  const add=document.createElement('div');add.className='jnl-add';
+  add.innerHTML='<textarea class="jnl-input" placeholder="Neuer Eintrag…" rows="2"></textarea>'+
+    '<button class="jnl-submit">Eintragen</button>';
+  const doAdd=()=>{
+    const v=add.querySelector('textarea').value.trim();if(!v)return;
+    const author=getUserName()||('Nutzer '+currentUserId.slice(-4).toUpperCase());
+    if(!t.journal)t.journal=[];
+    t.journal.push({id:uid(),text:v,ts:new Date().toISOString(),author});
+    scheduleSave();
+    logChange('BEARBEITET',t.title,{feld:'Eintrag'});
+    add.querySelector('textarea').value='';
+    renderJournal(t);
+  };
+  add.querySelector('.jnl-submit').onclick=doAdd;
+  add.querySelector('textarea').onkeydown=e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey))doAdd();};
+  box.appendChild(add);
+}
+
 function closeSheet(){$('#scrim').classList.remove('open');$('#sheet').classList.remove('open');sheetId=null;renderAll();}
 
 /* ===== HELPERS ===== */

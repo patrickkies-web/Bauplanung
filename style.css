@@ -361,3 +361,19 @@ body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);back
 .proto-user-row{display:flex;align-items:center;gap:10px;padding:10px 16px 14px;border-bottom:.5px solid var(--sep-soft)}
 .proto-user-input{flex:1;font-size:15px;background:var(--fill);border-radius:9px;padding:8px 12px;color:var(--label)}
 .proto-user-label{font-size:13px;color:var(--label2);white-space:nowrap}
+
+/* ============ JOURNAL ============ */
+.jnl-list{display:flex;flex-direction:column}
+.jnl-row{padding:11px 14px;border-bottom:.5px solid var(--sep-soft)}
+.jnl-row:last-child{border-bottom:none}
+.jnl-header{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.jnl-ts{font-size:12px;color:var(--label2);font-variant-numeric:tabular-nums;flex:1}
+.jnl-author{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);padding:1px 8px;border-radius:20px}
+.jnl-del{color:var(--label3);width:28px;height:28px;border-radius:7px;flex-shrink:0}
+.jnl-del:active{background:var(--fill2);color:var(--red)}
+.jnl-text{font-size:15px;color:var(--label);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.jnl-add{padding:11px 14px;display:flex;flex-direction:column;gap:8px}
+.jnl-input{width:100%;font-size:15px;background:var(--fill);border-radius:10px;padding:9px 12px;color:var(--label);resize:none;line-height:1.45;min-height:64px;-webkit-user-select:text;user-select:text}
+.jnl-input::placeholder{color:var(--label3)}
+.jnl-submit{background:var(--blue);color:#fff;border-radius:10px;padding:10px;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.jnl-submit:active{opacity:.8}
