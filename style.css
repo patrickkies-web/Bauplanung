@@ -80,9 +80,9 @@ main{flex:1;position:relative;overflow:hidden}
 .month-sep{font-size:13px;color:var(--label2);padding:18px 4px 8px;font-weight:600;letter-spacing:.01em}
 .month-sep:first-child{padding-top:6px}
 .today-divider{display:flex;align-items:center;gap:10px;padding:14px 2px 14px}
-.today-divider .ln{flex:1;height:2px;background:var(--red);border-radius:2px}
-.today-divider .tg{font-size:11px;font-weight:700;color:#fff;background:var(--red);padding:3px 11px;border-radius:20px;letter-spacing:.04em}
-.today-divider .dt{font-size:11px;color:var(--red);font-weight:600}
+.today-divider .ln{flex:1;height:2px;background:#34C759;border-radius:2px}
+.today-divider .tg{font-size:11px;font-weight:700;color:#fff;background:#34C759;padding:3px 11px;border-radius:20px;letter-spacing:.04em}
+.today-divider .dt{display:none}
 
 .tl-tile{
   background:var(--card);border-radius:13px;
@@ -109,7 +109,7 @@ main{flex:1;position:relative;overflow:hidden}
 .tl-empty{font-size:14px;color:var(--label2);font-style:italic;padding:16px 4px;text-align:center}
 
 /* Tray (Nicht terminiert) */
-.tray{flex-shrink:0;background:var(--bg2);border-top:.5px solid var(--sep);padding:9px 0 0;display:flex;flex-direction:column;max-height:42vh}
+.tray{display:none}
 .tray-h{font-size:12px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.03em;padding:0 16px 7px}
 .tray-scroll{display:flex;flex-direction:column;gap:7px;overflow-y:auto;overflow-x:hidden;padding:0 16px 12px;-webkit-overflow-scrolling:touch}
 .tray-chip{
@@ -327,7 +327,7 @@ body{background:linear-gradient(180deg,#F8F8FC 0%,#EFEFF4 38%,#EBEBF0 100%);back
 .empty-pane .ic svg{width:36px;height:36px}
 
 /* Heute-Trenner */
-.today-divider .tg{box-shadow:0 2px 8px rgba(255,59,48,.3)}
+.today-divider .tg{box-shadow:0 2px 8px rgba(52,199,89,.3)}
 
 /* Navbar */
 .nav-title{font-weight:700}

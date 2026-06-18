@@ -1,5 +1,5 @@
 "use strict";
-const VERSION='1.11';
+const VERSION='1.12';
 const CATS={
   arbeit:{label:'Arbeit',color:'#FF9500'},
   absprache:{label:'Absprache',color:'#007AFF'},
@@ -274,6 +274,13 @@ function dateForDrop(clientY,excludeId){
   return today();
 }
 
+function idxForDrop(clientY,excludeId){
+  const excIds=new Set(subtreeIds((findTask(excludeId)||{task:{id:excludeId,children:[]}}).task));
+  excIds.add(excludeId);
+  const tops=[...$('#tlInner').querySelectorAll('.tl-tile[data-depth="0"]')].filter(el=>!excIds.has(el.dataset.id));
+  for(const el of tops){const r=el.getBoundingClientRect();if(clientY<r.top+r.height/2){const i=state.tasks.findIndex(t=>t.id===el.dataset.id);return i>=0?i:state.tasks.length;}}
+  return state.tasks.length;
+}
 function subtreeIds(task){const ids=[];walk([task],x=>ids.push(x.id));return ids;}
 function detachTask(id){const f=findTask(id);if(!f||!f.parent)return false;const i=f.list.findIndex(x=>x.id===id);const[m]=f.list.splice(i,1);state.tasks.push(m);return true;}
 function nestUnder(id,targetId){
@@ -288,22 +295,19 @@ function nestUnder(id,targetId){
 
 function renderTimeline(){
   const inner=$('#tlInner');inner.innerHTML='';
-  const dated=state.tasks.filter(t=>t.start).map(t=>({t,s:parseD(t.start),e:parseD(t.end)||parseD(t.start)}));
-  dated.sort((a,b)=>a.s-b.s||(a.t.title<b.t.title?-1:1));
-  if(!dated.length){
-    inner.innerHTML='<div class="today-divider" id="todayDiv"><span class="tg">HEUTE</span><span class="dt">'+fmtLong(today())+'</span><span class="ln"></span></div>'+
-      '<div class="tl-empty">Noch nichts terminiert.<br>Ziehe unten eine Aufgabe am Ziehgriff hierher, oder lege oben mit + etwas an.</div>';
-    renderTray();return;
+  if(!state.tasks.length){
+    inner.appendChild(todayDivider());
+    const emp=document.createElement('div');emp.className='tl-empty';
+    emp.innerHTML='Noch keine Aufgaben.<br>Mit + oben anlegen.';
+    inner.appendChild(emp);
+    return;
   }
-  const t0=today();let lastMonth=null,todayPlaced=false;
-  dated.forEach(d=>{
-    if(!todayPlaced&&d.s>=t0){inner.appendChild(todayDivider());todayPlaced=true;lastMonth=null;}
-    const mk=d.s.getFullYear()+'-'+d.s.getMonth();
-    if(mk!==lastMonth){const sep=document.createElement('div');sep.className='month-sep';sep.textContent=MON[d.s.getMonth()]+' '+d.s.getFullYear();inner.appendChild(sep);lastMonth=mk;}
-    appendTaskTiles(d.t,0,inner);
+  let todayPlaced=false;
+  state.tasks.forEach(t=>{
+    if(!todayPlaced&&!t.done){inner.appendChild(todayDivider());todayPlaced=true;}
+    appendTaskTiles(t,0,inner);
   });
   if(!todayPlaced)inner.appendChild(todayDivider());
-  renderTray();
 }
 function appendTaskTiles(task,depth,inner){
   inner.appendChild(buildTile(task,depth));
@@ -311,7 +315,7 @@ function appendTaskTiles(task,depth,inner){
 }
 function todayDivider(){
   const el=document.createElement('div');el.className='today-divider';el.id='todayDiv';
-  el.innerHTML='<span class="tg">HEUTE</span><span class="dt">'+fmtShort(today())+'</span><span class="ln"></span>';
+  el.innerHTML='<span class="ln"></span><span class="tg">HEUTE</span><span class="ln"></span>';
   return el;
 }
 function buildTile(t,depth){
@@ -322,13 +326,13 @@ function buildTile(t,depth){
   tile.dataset.id=t.id;tile.dataset.date=t.start||'';tile.dataset.depth=depth;
   if(depth)tile.style.marginLeft=(depth*20)+'px';
   if(depth)tile.style.borderLeft='3px solid '+c;
-  const dateTxt=s?(fmtShort(s)+(dur>0?'–'+fmtShort(e):'')):'ohne Datum';
+  const dateTxt=s?(fmtShort(s)+(dur>0?'–'+fmtShort(e):'')):'';
   tile.innerHTML=
     (hasKids?'<button class="tt-caret'+(open?' open':'')+'">›</button>':'<span class="tt-caret sp"></span>')+
     catIcon(t.cat)+
     '<div class="tt-body"><div class="tt-title">'+esc(t.title||'Ohne Titel')+'</div>'+
     '<div class="tt-meta"><span class="cat-name" style="color:'+c+'">'+CATS[t.cat].label+'</span>'+
-    '<span class="mid">·</span>'+dateTxt+
+    (dateTxt?'<span class="mid">·</span>'+dateTxt:'')+
     '<span class="tt-prio" style="background:'+PRIOS[t.prio].color+'"></span>'+
     (hasKids?'<span class="tt-sub">'+t.children.length+'</span>':'')+'</div></div>'+
     '<button class="tt-check'+(t.done?' on':'')+'">'+(t.done?'<svg class="svgi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"/></svg>':'')+'</button>'+
@@ -428,15 +432,13 @@ function attachDateDrag(handle,srcEl,task,fromTray){
       }else{renderTimeline();toast('Hier nicht möglich');}
       return;
     }
-    const nd=dateForDrop(py,task.id);
+    const idx=idxForDrop(py,task.id);
     detachTask(task.id);
-    const f=findTask(task.id);if(!f){renderTimeline();return;}
-    const old=parseD(f.task.start),oe=parseD(f.task.end);
-    f.task.start=isoD(nd);
-    if(oe&&old){const sp=dayDiff(oe,old);f.task.end=isoD(new Date(nd.getTime()+sp*MS));}
+    const i=state.tasks.findIndex(x=>x.id===task.id);
+    if(i>=0){const[mv]=state.tasks.splice(i,1);state.tasks.splice(idx>i?Math.max(0,idx-1):idx,0,mv);}
     scheduleSave();renderAll();
-    logChange('VERSCHOBEN',task.title,{datum:isoD(nd)});
-    toast((fromTray?'Terminiert auf ':'Verschoben auf ')+fmtLong(nd));
+    logChange('VERSCHOBEN',task.title);
+    toast('Reihenfolge geändert');
   };
   const cancel=()=>{removeGhost();cleanup();renderTimeline();};
   handle.addEventListener('pointerdown',down);
